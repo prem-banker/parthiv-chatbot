@@ -46,6 +46,30 @@ function App() {
     },
   };
 
+  const isGreeting = (text) => {
+    const greetings = [
+      "hi",
+      "hello",
+      "hey",
+      "yo",
+      "whatsup",
+      "sup",
+      "hola",
+      "howdy",
+      "what's up",
+    ];
+    return greetings.some((greeting) =>
+      text
+        .toLowerCase()
+        .replace(/[!.?]/g, "")
+        .trim()
+        .split(/\s+/)
+        .some(
+          (word) => word.replace(/(.)\1+/g, "$1") === greeting // This handles repeated letters like "hiiii"
+        )
+    );
+  };
+
   const handleAppointmentResponse = (userInput) => {
     const input = userInput.toLowerCase();
 
@@ -163,6 +187,15 @@ function App() {
       setInput("");
 
       setTimeout(() => {
+        // First check if it's a greeting
+        if (isGreeting(input)) {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { text: "Hey! How can I help you today?", sender: "bot" },
+          ]);
+          return;
+        }
+
         // Check if we're in appointment flow
         const appointmentResponse = handleAppointmentResponse(input);
         if (appointmentResponse) {
