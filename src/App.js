@@ -6,8 +6,27 @@ function App() {
   const [isChatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [appointmentState, setAppointmentState] = useState({
+    isActive: false,
+    currentQuestion: null,
+    doctor: null,
+    specialty: null,
+    patientInfo: {
+      name: null,
+      phone: null,
+      date: null,
+      time: null,
+    },
+  });
 
-  // Predefined responses for different scenarios
+  // Questions sequence for appointment
+  const appointmentQuestions = {
+    name: "Could you please provide your full name?",
+    phone: "What's the best phone number to reach you?",
+    date: "What date would you prefer? (MM/DD/YYYY)",
+    time: "What time works best for you? We have slots between 9 AM and 5 PM",
+  };
+
   const scenarios = {
     ankle: {
       diagnosis:
@@ -25,6 +44,99 @@ function App() {
       doctor: "Dr. Michael Chen",
       specialty: "Dental Surgeon",
     },
+  };
+
+  const handleAppointmentResponse = (userInput) => {
+    const input = userInput.toLowerCase();
+
+    // Starting the appointment process
+    if (!appointmentState.isActive && input.includes("yes")) {
+      setAppointmentState({
+        ...appointmentState,
+        isActive: true,
+        currentQuestion: "name",
+        doctor: messages[messages.length - 1].text.includes("Anderson")
+          ? "Dr. Sarah Anderson"
+          : "Dr. Michael Chen",
+        specialty: messages[messages.length - 1].text.includes("Anderson")
+          ? "Orthopedic Specialist"
+          : "Dental Surgeon",
+      });
+      return appointmentQuestions.name;
+    }
+
+    // Handle appointment information gathering
+    if (appointmentState.isActive) {
+      const currentQ = appointmentState.currentQuestion;
+      const newPatientInfo = { ...appointmentState.patientInfo };
+
+      // Store the answer to current question
+      newPatientInfo[currentQ] = userInput;
+
+      // Determine next question or finish
+      let nextQuestion = null;
+      switch (currentQ) {
+        case "name":
+          nextQuestion = "phone";
+          break;
+        case "phone":
+          nextQuestion = "date";
+          break;
+        case "date":
+          nextQuestion = "time";
+          break;
+        case "time":
+          // All info gathered, show summary
+          const summary = `Please confirm your appointment details:\n\nDoctor: ${appointmentState.doctor}\nSpecialty: ${appointmentState.specialty}\nPatient Name: ${newPatientInfo.name}\nPhone: ${newPatientInfo.phone}\nDate: ${newPatientInfo.date}\nTime: ${newPatientInfo.time}\n\nWould you like to confirm this appointment?`;
+          setAppointmentState({
+            ...appointmentState,
+            currentQuestion: "confirm",
+            patientInfo: newPatientInfo,
+          });
+          return summary;
+        case "confirm":
+          if (input.includes("yes")) {
+            setAppointmentState({
+              isActive: false,
+              currentQuestion: null,
+              doctor: null,
+              specialty: null,
+              patientInfo: {
+                name: null,
+                phone: null,
+                date: null,
+                time: null,
+              },
+            });
+            return "Great! Your appointment has been confirmed. We'll send a confirmation text to your phone number. See you soon!";
+          } else {
+            setAppointmentState({
+              isActive: false,
+              currentQuestion: null,
+              doctor: null,
+              specialty: null,
+              patientInfo: {
+                name: null,
+                phone: null,
+                date: null,
+                time: null,
+              },
+            });
+            return "I understand. Would you like to restart the appointment booking process?";
+          }
+      }
+
+      if (nextQuestion) {
+        setAppointmentState({
+          ...appointmentState,
+          currentQuestion: nextQuestion,
+          patientInfo: newPatientInfo,
+        });
+        return appointmentQuestions[nextQuestion];
+      }
+    }
+
+    return null;
   };
 
   const detectScenario = (text) => {
@@ -50,9 +162,19 @@ function App() {
       setMessages([...messages, { text: input, sender: "user" }]);
       setInput("");
 
-      // Detect scenario and generate response
-      const scenario = detectScenario(input);
       setTimeout(() => {
+        // Check if we're in appointment flow
+        const appointmentResponse = handleAppointmentResponse(input);
+        if (appointmentResponse) {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { text: appointmentResponse, sender: "bot" },
+          ]);
+          return;
+        }
+
+        // Regular scenario detection
+        const scenario = detectScenario(input);
         if (scenario) {
           setMessages((prevMessages) => [
             ...prevMessages,
