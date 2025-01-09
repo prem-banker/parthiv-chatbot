@@ -215,7 +215,7 @@ function App() {
         </a>
       </header>
       <button className="fab" onClick={toggleChat}>
-        Chat
+        HA
       </button>
       {isChatOpen && (
         <div className="chat-window">
