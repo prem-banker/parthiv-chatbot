@@ -87,6 +87,12 @@
   position: relative;
   clear: both;
   line-height: 1.4;
+  text-align: left;
+}
+
+.message p {
+  margin: 4px 0;
+  text-align: left;
 }
 
 .user {
