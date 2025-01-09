@@ -45,6 +45,12 @@ function App() {
       </button>
       {isChatOpen && (
         <div className="chat-window">
+          <div className="chat-header">
+            <div className="chat-contact">
+              <div className="contact-avatar">HA</div>
+              <div className="contact-name">HealthAI</div>
+            </div>
+          </div>
           <div className="chat-messages">
             {messages.map((msg, index) => (
               <div key={index} className={`message ${msg.sender}`}>
@@ -58,11 +64,11 @@ function App() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Type a message..."
+              placeholder="Message"
               className="chat-input"
             />
             <button className="send-button" onClick={handleSend}>
-              Send
+              ↑
             </button>
           </div>
         </div>
